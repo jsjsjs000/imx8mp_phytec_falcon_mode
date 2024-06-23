@@ -1,0 +1,5 @@
+firmware-imx*/
+imx-atf/
+imx-mkimage/
+linux-imx/
+u-boot-imx/
