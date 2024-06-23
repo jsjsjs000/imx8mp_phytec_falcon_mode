@@ -4,6 +4,8 @@
 pd=23.1.0
 toolchain_source=/opt/ampliphy-vendor-xwayland/BSP-Yocto-NXP-i.MX8MP-PD23.1.0/environment-setup-cortexa53-crypto-phytec-linux
 toolchain_sysroot=/opt/ampliphy-vendor-xwayland/BSP-Yocto-NXP-i.MX8MP-PD23.1.0/sysroots/cortexa53-crypto-phytec-linux
+yocto_dir=~/phyLinux
+yocto_source=sources/poky/oe-init-build-env
 ddr_firmware=firmware-imx-8.18.1
 device_tree=imx8mp-phyboard-pollux-rdk-falcon
 
@@ -40,6 +42,15 @@ if [ ! -f "${toolchain_source}" ]; then
 fi
 if [ ! -d "${toolchain_sysroot}" ]; then
 	echo -e "${red}BSP toolchain folder not exists:\n${toolchain_sysroot}\nSet toolchain_sysroot variable.${default}"
+	exit 1
+fi
+
+if [[ "${kernel_yocto}" == "yocto" && (! -d "${yocto_dir}") ]]; then
+	echo -e "${red}Folder '${yocto_dir}' not found.${default}"
+	exit 1
+fi
+if [[ "${kernel_yocto}" == "yocto" && (! -f "${yocto_dir}/${yocto_source}") ]]; then
+	echo -e "${red}File '${yocto_dir}/${yocto_source}' not found.${default}"
 	exit 1
 fi
 
