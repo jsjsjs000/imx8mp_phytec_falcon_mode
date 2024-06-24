@@ -42,15 +42,20 @@ source sources/poky/oe-init-build-env
 bitbake phytec-qt6demo-image
 cd $dir  # return to original folder
 
-# devtool modify -x linux-imx linux-imx
-# devtool modify -x u-boot-imx u-boot-imx
-# devtool modify -x imx-atf imx-atf
-# devtool modify -x imx-boot-phytec imx-boot-phytec
-#? firmware-imx_8.18.1.bb
-
 # Apply falcon patches, compile bootloader and write to SD card
 ./scripts/5-apply_falcon_patches.sh
+
 # Set variables: toolchain_source, toolchain_sysroot, yocto_dir, yocto_source, yocto_kernel
 # in script '/scripts/4-compile_and_write_to_sd_card.sh'
 ./scripts/4-compile_and_write_to_sd_card.sh yocto falcon /dev/mmcblk0  # or /dev/sd[x]
+
 # remove SD card and run i.MX devboard
+
+# 5. Read system boot time
+systemd-analyze time
+#>   Normal:
+#> Startup finished in 1.939s (kernel) + 3.867s (userspace) = 5.806s 
+#> graphical.target reached after 3.860s in userspace
+#>   Falcon:
+#> Startup finished in 3.918s (kernel) + 5.766s (userspace) = 9.684s 
+#> graphical.target reached after 5.751s in userspace

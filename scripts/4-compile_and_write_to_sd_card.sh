@@ -132,7 +132,7 @@ fi
 
 echo "-------------------- U-boot --------------------"
 cd u-boot-imx/
-# Device Tree from:
+# Device Tree:
 #   u-boot-imx/arch/arm/dts/imx8mp-phyboard-pollux-rdk.dts
 #   u-boot-imx/arch/arm/dts/imx8mp-phycore-som.dtsi
 #   u-boot-imx/arch/arm/dts/imx8mp.dtsi
