@@ -4,8 +4,11 @@
 pd=23.1.0
 toolchain_source=/opt/ampliphy-vendor-xwayland/BSP-Yocto-NXP-i.MX8MP-PD23.1.0/environment-setup-cortexa53-crypto-phytec-linux
 toolchain_sysroot=/opt/ampliphy-vendor-xwayland/BSP-Yocto-NXP-i.MX8MP-PD23.1.0/sysroots/cortexa53-crypto-phytec-linux
+
 yocto_dir=~/phyLinux
 yocto_source=sources/poky/oe-init-build-env
+yocto_kernel=${yocto_dir}/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/build/arch/arm64/boot/Image
+
 ddr_firmware=firmware-imx-8.18.1
 device_tree=imx8mp-phyboard-pollux-rdk-falcon
 
@@ -70,12 +73,13 @@ if [ ! -d "u-boot-imx/" ]; then
 	echo -e "${red}Folder 'u-boot-imx/' not found.${default}"
 	exit 1
 fi
-if [ ! -d "linux-imx/" ]; then
+
+if [[ "${kernel_yocto}" == "kernel" && ! -d "linux-imx/" ]]; then
 	echo -e "${red}Folder 'linux-imx/' not found.${default}"
 	exit 1
 fi
-if [[ "${kernel_yocto}" == "kernel" && ! -d "linux-imx/" ]]; then
-	echo -e "${red}Folder 'linux-imx/' not found.${default}"
+if [[ "${kernel_yocto}" == "yocto" && ! -f ${yocto_kernel} ]]; then
+	echo -e "${red}File '${yocto_kernel}' not exists.${default}"
 	exit 1
 fi
 
@@ -128,7 +132,7 @@ fi
 
 echo "-------------------- U-boot --------------------"
 cd u-boot-imx/
-# Device Tree:
+# Device Tree from:
 #   u-boot-imx/arch/arm/dts/imx8mp-phyboard-pollux-rdk.dts
 #   u-boot-imx/arch/arm/dts/imx8mp-phycore-som.dtsi
 #   u-boot-imx/arch/arm/dts/imx8mp.dtsi
@@ -173,7 +177,7 @@ else
 fi
 
 if [ "${kernel_yocto}" == "kernel" ]; then
-	echo "-------------------- Linux Kernel --------------------"
+	echo "-------------------- Linux Kernel standalone --------------------"
 	cd linux-imx/
 	if [ ! -f .config ]; then
 		make imx_v8_defconfig imx8_phytec_distro.config imx8_phytec_platform.config
@@ -188,6 +192,15 @@ if [ "${kernel_yocto}" == "kernel" ]; then
 
 	cp arch/arm64/boot/Image ../imx-mkimage/iMX8M/
 	cd ..
+fi
+
+if [ "${kernel_yocto}" == "yocto" ]; then
+	echo "-------------------- Linux Kernel from Yocto --------------------"
+	if [ ! -f ${yocto_kernel} ]; then
+		echo -e "${red}File '${yocto_kernel}' not exists.${default}"
+		exit 1
+	fi
+	cp ${yocto_kernel} imx-mkimage/iMX8M/
 fi
 
 echo "-------------------- copy flash.bin to SD card --------------------"
@@ -220,19 +233,17 @@ if [ "${normal_falcon}" == "falcon" ]; then
 	fi
 
 	chmod +x ../mkimage_fit_atf_kernel.sh
-	# FIT image
 	ATF_LOAD_ADDR=0x00970000 KERNEL_LOAD_ADDR=0x40200000 ../mkimage_fit_atf_kernel.sh > Image.its
-	# FIT binary
+
+	echo "-------------------- FIT binary --------------------"
 	./mkimage_uboot -E -p 0x3000 -f Image.its Image.itb
 	cp Image.itb /media/$USER/boot
-	cd ../..
 
 	echo "-------------------- Flattened Device Tree --------------------"
-	cd linux-imx/arch/arm64/boot/
 	mkimage -A arm -O linux -T kernel -C none -a 0x43FFFFC0 -e 0x44000000 -n "Linux kernel" -d Image uImage
 	sudo mkdir -p /media/$USER/root/home/root/.falcon
 	sudo cp uImage /media/$USER/root/home/root/.falcon
-	cd ../../../..
+	cd ../..
 fi
 
 echo "-------------------- Unmount SD card --------------------"
