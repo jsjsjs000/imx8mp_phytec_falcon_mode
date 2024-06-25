@@ -1,20 +1,21 @@
 diff --git a/arch/arm64/boot/dts/freescale/Makefile b/arch/arm64/boot/dts/freescale/Makefile
-index 4b57ee793..4f3628147 100644
+index 4b57ee793851..e4baeb07c6cf 100644
 --- a/arch/arm64/boot/dts/freescale/Makefile
 +++ b/arch/arm64/boot/dts/freescale/Makefile
-@@ -121,6 +121,7 @@ dtb-$(CONFIG_ARCH_MXC) += imx8mp-evk.dtb imx8mp-evk-rm67191.dtb imx8mp-evk-it626
+@@ -121,6 +121,8 @@ dtb-$(CONFIG_ARCH_MXC) += imx8mp-evk.dtb imx8mp-evk-rm67191.dtb imx8mp-evk-it626
  			  imx8mp-evk-usdhc1-m2.dtb imx8mp-evk-rm67199.dtb \
  			  imx8mp-evk-dpdk.dtb imx8mp-evk-8mic-swpdm.dtb imx8mp-evk-rpmsg-lpv.dtb imx8mp-evk-revA3-8mic-revE.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mp-phyboard-pollux-rdk.dtb
-+dtb-$(CONFIG_ARCH_MXC) += imx8mp-phyboard-pollux-rdk-falcon.dtb
++dtb-$(CONFIG_ARCH_MXC) += imx8mp-phyboard-pollux-rdk-falcon-sdcard.dtb
++dtb-$(CONFIG_ARCH_MXC) += imx8mp-phyboard-pollux-rdk-falcon-emmc.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mq-evk.dtb imx8mq-evk-rpmsg.dtb imx8mp-ab2.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mp-ddr4-evk.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mp-evk-ndm.dtb
-diff --git a/arch/arm64/boot/dts/freescale/imx8mp-phyboard-pollux-rdk-falcon.dts b/arch/arm64/boot/dts/freescale/imx8mp-phyboard-pollux-rdk-falcon.dts
+diff --git a/arch/arm64/boot/dts/freescale/imx8mp-phyboard-pollux-rdk-falcon-emmc.dts b/arch/arm64/boot/dts/freescale/imx8mp-phyboard-pollux-rdk-falcon-emmc.dts
 new file mode 100644
-index 000000000..8b93da96e
+index 000000000000..0da271ce7cf2
 --- /dev/null
-+++ b/arch/arm64/boot/dts/freescale/imx8mp-phyboard-pollux-rdk-falcon.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mp-phyboard-pollux-rdk-falcon-emmc.dts
 @@ -0,0 +1,23 @@
 +// SPDX-License-Identifier: GPL-2.0
 +
@@ -27,14 +28,43 @@ index 000000000..8b93da96e
 +	compatible = "phytec,imx8mp-phyboard-pollux-rdk",
 +		     "phytec,imx8mp-phycore-som", "fsl,imx8mp";
 +
-+  /* from u-boot-imx/arch/arm/dts/imx8mp-phycore-som.dtsi */
++	/* from u-boot-imx/arch/arm/dts/imx8mp-phycore-som.dtsi */
 +	memory@40000000 {
 +		device_type = "memory";
 +		reg = <0x0 0x40000000 0 0x80000000>;
 +	};
 +
-+  /* U-boot: print mmcargs */
-+  /* added: quiet - remove print boot log */
++	/* U-boot: print mmcargs */
++	/* added: quiet - remove print boot log */
++	chosen {
++		bootargs = "console=ttymxc0,115200 root=/dev/mmcblk1p1 fsck.repair=yes rootwait rw quiet";
++	};
++};
+diff --git a/arch/arm64/boot/dts/freescale/imx8mp-phyboard-pollux-rdk-falcon-sdcard.dts b/arch/arm64/boot/dts/freescale/imx8mp-phyboard-pollux-rdk-falcon-sdcard.dts
+new file mode 100644
+index 000000000000..9ccef310709b
+--- /dev/null
++++ b/arch/arm64/boot/dts/freescale/imx8mp-phyboard-pollux-rdk-falcon-sdcard.dts
+@@ -0,0 +1,23 @@
++// SPDX-License-Identifier: GPL-2.0
++
++/dts-v1/;
++
++#include "imx8mp-phyboard-pollux-rdk.dts"
++
++/ {
++	model = "PHYTEC phyBOARD-Pollux i.MX8MP - Falcon mode";
++	compatible = "phytec,imx8mp-phyboard-pollux-rdk",
++		     "phytec,imx8mp-phycore-som", "fsl,imx8mp";
++
++	/* from u-boot-imx/arch/arm/dts/imx8mp-phycore-som.dtsi */
++	memory@40000000 {
++		device_type = "memory";
++		reg = <0x0 0x40000000 0 0x80000000>;
++	};
++
++	/* U-boot: print mmcargs */
++	/* added: quiet - remove print boot log */
 +	chosen {
 +		bootargs = "console=ttymxc0,115200 root=/dev/mmcblk1p2 fsck.repair=yes rootwait rw quiet";
 +	};

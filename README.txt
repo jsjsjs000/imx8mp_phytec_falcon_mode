@@ -98,3 +98,31 @@ parted /dev/mmcblk2 print  # check again
 resize2fs /dev/mmcblk2p2
 reboot
 df -h
+
+
+
+
+
+-------------------------------------------
+-
+cp patches/0001-falcon-mode-phytec-imx8mp-linux-imx.patch ~/phyLinux/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/git/
+cd ~/phyLinux/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/git/
+git apply 0001-falcon-mode-phytec-imx8mp-linux-imx.patch
+ls ~/phyLinux/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/build/arch/arm64/boot/dts/freescale/imx8mp-phyboard-pollux-rdk*
+-
+
+
+# yocto env...
+devtool modify -x linux-imx linux-imx
+cp patches/0001-falcon-mode-phytec-imx8mp-linux-imx.patch ~/phyLinux/build/linux-imx/
+cd ~/phyLinux/build/linux-imx/
+git apply 0001-falcon-mode-phytec-imx8mp-linux-imx.patch
+cd ..
+
+
+~/phyLinux/sources/meta-phytec/conf/machine/phyboard-pollux-imx8mp-3.conf
+        freescale/imx8mp-phyboard-pollux-rdk-falcon-sdcard.dtb \
+        freescale/imx8mp-phyboard-pollux-rdk-falcon-emmc.dtb \
+
+bitbake -c compile -f linux-imx
+~/phyLinux/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/linux-imx-5.15.71/arch/arm64/boot/dts/freescale/imx8mp-phyboard-pollux-rdk-falcon-sdcard.dtb
