@@ -40,51 +40,51 @@ if [[ "${kernel_yocto}" != "kernel" && "${kernel_yocto}" != "yocto" ]]; then hel
 if [[ "${normal_falcon}" != "normal" && "${normal_falcon}" != "falcon" ]]; then help_and_exit; fi
 
 if [ ! -f "${toolchain_source}" ]; then
-	echo -e "${red}BSP toolchain not exists:\n${toolchain_source}\nSet toolchain_source variable.${default}"
+	echo -e "${red}Error: BSP toolchain not exists:\n${toolchain_source}\nSet toolchain_source variable.${default}"
 	exit 1
 fi
 if [ ! -d "${toolchain_sysroot}" ]; then
-	echo -e "${red}BSP toolchain folder not exists:\n${toolchain_sysroot}\nSet toolchain_sysroot variable.${default}"
+	echo -e "${red}Error: BSP toolchain folder not exists:\n${toolchain_sysroot}\nSet toolchain_sysroot variable.${default}"
 	exit 1
 fi
 
 if [[ "${kernel_yocto}" == "yocto" && (! -d "${yocto_dir}") ]]; then
-	echo -e "${red}Folder '${yocto_dir}' not found.${default}"
+	echo -e "${red}Error: Folder '${yocto_dir}' not found.${default}"
 	exit 1
 fi
 if [[ "${kernel_yocto}" == "yocto" && (! -f "${yocto_dir}/${yocto_source}") ]]; then
-	echo -e "${red}File '${yocto_dir}/${yocto_source}' not found.${default}"
+	echo -e "${red}Error: File '${yocto_dir}/${yocto_source}' not found.${default}"
 	exit 1
 fi
 
 if [ ! -d "${firmware}/" ]; then
-	echo -e "${red}Folder '${firmware}/' not found.${default}"
+	echo -e "${red}Error: Folder '${firmware}/' not found.${default}"
 	exit 1
 fi
 if [ ! -d "imx-atf/" ]; then
-	echo -e "${red}Folder 'imx-atf/' not found.${default}"
+	echo -e "${red}Error: Folder 'imx-atf/' not found.${default}"
 	exit 1
 fi
 if [ ! -d "imx-mkimage/" ]; then
-	echo -e "${red}Folder 'imx-mkimage/' not found.${default}"
+	echo -e "${red}Error: Folder 'imx-mkimage/' not found.${default}"
 	exit 1
 fi
 if [ ! -d "u-boot-imx/" ]; then
-	echo -e "${red}Folder 'u-boot-imx/' not found.${default}"
+	echo -e "${red}Error: Folder 'u-boot-imx/' not found.${default}"
 	exit 1
 fi
 
 if [[ "${kernel_yocto}" == "kernel" && ! -d "linux-imx/" ]]; then
-	echo -e "${red}Folder 'linux-imx/' not found.${default}"
+	echo -e "${red}Error: Folder 'linux-imx/' not found.${default}"
 	exit 1
 fi
 if [[ "${kernel_yocto}" == "yocto" && ! -f ${yocto_kernel} ]]; then
-	echo -e "${red}File '${yocto_kernel}' not exists.${default}"
+	echo -e "${red}Error: File '${yocto_kernel}' not exists.${default}"
 	exit 1
 fi
 
 if [ -z "${USER}" ]; then
-	echo -e "${red}Variable 'USER' not defined in script.${default}"
+	echo -e "${red}Error: Variable 'USER' not defined in script.${default}"
 	exit 1
 fi
 
@@ -92,7 +92,7 @@ if grep "${sdcard}" /etc/mtab > /dev/null 2>&1; then
 	echo -n ""
 else
 	lsblk -e7
-	echo -e "\n${red}SD card '${sdcard}' not found in devices.${default}"
+	echo -e "\n${red}Error: SD card '${sdcard}' not found in devices.${default}"
 	exit 1
 fi
 
@@ -186,7 +186,7 @@ if [ "${kernel_yocto}" == "kernel" ]; then
 	make -j $(nproc --all) all
 
 	if [ ! -f arch/arm64/boot/Image ]; then
-		echo -e "${red}File 'arch/arm64/boot/Image' not exists.${default}"
+		echo -e "${red}Error: File 'arch/arm64/boot/Image' not exists.${default}"
 		exit 1
 	fi
 
@@ -197,7 +197,7 @@ fi
 if [ "${kernel_yocto}" == "yocto" ]; then
 	echo "-------------------- Linux Kernel from Yocto --------------------"
 	if [ ! -f ${yocto_kernel} ]; then
-		echo -e "${red}File '${yocto_kernel}' not exists.${default}"
+		echo -e "${red}Error: File '${yocto_kernel}' not exists.${default}"
 		exit 1
 	fi
 	cp ${yocto_kernel} imx-mkimage/iMX8M/
@@ -205,13 +205,22 @@ fi
 
 echo "-------------------- copy flash.bin to SD card --------------------"
 sudo dd if=imx-mkimage/iMX8M/flash.bin of=${sdcard} bs=1k seek=32 conv=fsync; sync
-# sudo dd if=imx-atf/build/imx8mp/release/bl31.bin of=${sdcard} bs=512 seek=50131584 conv=fsync; sync
+
+sudo mkdir -p /media/$USER/root/home/root/.falcon/
+if [ "${normal_falcon}" == "normal" ]; then
+	cp imx-mkimage/iMX8M/flash.bin flash_normal.bin
+	sudo cp imx-mkimage/iMX8M/flash.bin /media/$USER/root/home/root/.falcon/flash_normal.bin
+fi
+if [ "${normal_falcon}" == "falcon" ]; then
+	cp imx-mkimage/iMX8M/flash.bin flash_falcon.bin
+	sudo cp imx-mkimage/iMX8M/flash.bin /media/$USER/root/home/root/.falcon/flash_falcon.bin
+fi
 
 if [ "${normal_falcon}" == "falcon" ]; then
 	echo -e "-------------------- Device Tree ${device_tree}.dtb to SD card --------------------"
 	if [ "${kernel_yocto}" == "kernel" ]; then
 		if [ ! -f linux-imx/arch/arm64/boot/dts/freescale/${device_tree}.dtb ]; then
-			echo -e "${red}File '${device_tree}.dtb' not exists.${default}"
+			echo -e "${red}Error: File '${device_tree}.dtb' not exists.${default}"
 			exit 1
 		fi
 		cp linux-imx/arch/arm64/boot/dts/freescale/${device_tree}.dtb /media/$USER/boot
@@ -228,7 +237,7 @@ if [ "${normal_falcon}" == "falcon" ]; then
 	cd imx-mkimage/iMX8M/
 
 	if [ ! -f Image ]; then
-		echo -e "${red}File 'imx-mkimage/iMX8M/Image' not exists.${default}"
+		echo -e "${red}Error: File 'imx-mkimage/iMX8M/Image' not exists.${default}"
 		exit 1
 	fi
 
@@ -241,8 +250,8 @@ if [ "${normal_falcon}" == "falcon" ]; then
 
 	echo "-------------------- Flattened Device Tree --------------------"
 	mkimage -A arm -O linux -T kernel -C none -a 0x43FFFFC0 -e 0x44000000 -n "Linux kernel" -d Image uImage
-	sudo mkdir -p /media/$USER/root/home/root/.falcon
-	sudo cp uImage /media/$USER/root/home/root/.falcon
+	sudo mkdir -p /media/$USER/root/home/root/.falcon/
+	sudo cp uImage /media/$USER/root/home/root/.falcon/
 	cd ../..
 fi
 

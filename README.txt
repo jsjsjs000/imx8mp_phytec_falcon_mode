@@ -9,8 +9,7 @@ mkdir ~/pd23.1.0_bootloader
 cd ~/pd23.1.0_bootloader
 
 git clone https://github.com/jsjsjs000/imx8mp_phytec_falcon_mode.git
-cp -r imx8mp_phytec_falcon_mode/scripts .
-cp -r imx8mp_phytec_falcon_mode/patches .
+cp -r imx8mp_phytec_falcon_mode/{scripts,patches} .
 chmod +x scripts/*.sh
 
 # 3. Download i.MX 8M plus bootloader packages
@@ -52,6 +51,7 @@ cd $dir  # return to original folder
 # remove SD card and run i.MX devboard
 
 # 5. Read system boot time
+# on i.MX Linux:
 systemd-analyze time
 #>   Normal:
 #> Startup finished in 1.939s (kernel) + 3.867s (userspace) = 5.806s 
@@ -59,3 +59,42 @@ systemd-analyze time
 #>   Falcon:
 #> Startup finished in 3.918s (kernel) + 5.766s (userspace) = 9.684s 
 #> graphical.target reached after 5.751s in userspace
+
+# 6. Resize rootfs on SD card
+# on i.MX Linux - boot from SD card:
+parted /dev/mmcblk1 print  # SD card
+parted /dev/mmcblk1 resizepart 2 100%
+parted /dev/mmcblk1 print  # check again
+resize2fs /dev/mmcblk1p2
+reboot
+df -h
+
+# 7. Copy SD card image from Yocto to SD card
+# on PC:
+sudo cp ~/phyLinux/build/deploy/images/phyboard-pollux-imx8mp-3/phytec-qt6demo-image-phyboard-pollux-imx8mp-3.wic /media/$USER/root/
+sync; umount /media/$USER/boot; umount /media/$USER/root
+
+# 8. Copy SD card image to eMMC
+# on i.MX Linux - boot from SD card:
+fdisk -l
+dd if=/phytec-qt6demo-image-phyboard-pollux-imx8mp-3.wic of=/dev/mmcblk2
+
+dd if=/home/root/.falcon/flash_falcon.bin of=/dev/mmcblk2 bs=1k seek=32 conv=fsync
+
+mkdir -p /mnt/sd_boot
+mount /dev/mmcblk2p1 /mnt/sd_boot/
+cp /boot/* /mnt/sd_boot/
+umount /mnt/sd_boot/
+
+# eMMC boot mode DIP switch on Phytec PhyBoard (1234): 0000
+poweroff
+# remove SD card from i.MX, power on i.MX
+
+# 9. Resize rootfs on eMMC
+# on i.MX Linux - boot from eMMC:
+parted /dev/mmcblk2 print  # eMMC
+parted /dev/mmcblk2 resizepart 2 100%
+parted /dev/mmcblk2 print  # check again
+resize2fs /dev/mmcblk2p2
+reboot
+df -h
