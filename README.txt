@@ -23,11 +23,11 @@ chmod +x scripts/*.sh
 
 # Compile normal U-boot with SPL command and write to SD card
 # Set variables: toolchain_source, toolchain_sysroot in script '/scripts/4-compile_and_write_to_sd_card.sh'
-./scripts/4-compile_and_write_to_sd_card.sh kernel normal /dev/mmcblk0  # or /dev/sd[x]
+./scripts/4-compile_and_write_to_sd_card.sh kernel normal /dev/mmcblk0  # or /dev/sd[x] - lsblk -e7 to list SD cards
 
 # Apply falcon patches, compile bootloader and write to SD card
 ./scripts/5-apply_falcon_patches.sh
-./scripts/4-compile_and_write_to_sd_card.sh kernel falcon /dev/mmcblk0  # or /dev/sdx
+./scripts/4-compile_and_write_to_sd_card.sh kernel falcon /dev/mmcblk0  # or /dev/sd[x] - lsblk -e7 to list SD cards
 
 # remove SD card and run i.MX devboard
 
@@ -46,7 +46,7 @@ cd $dir  # return to original folder
 
 # Set variables: toolchain_source, toolchain_sysroot, yocto_dir, yocto_source, yocto_kernel
 # in script '/scripts/4-compile_and_write_to_sd_card.sh'
-./scripts/4-compile_and_write_to_sd_card.sh yocto falcon /dev/mmcblk0  # or /dev/sd[x]
+./scripts/4-compile_and_write_to_sd_card.sh yocto falcon /dev/mmcblk0  # or /dev/sd[x] - lsblk -e7 to list SD cards
 
 # remove SD card and run i.MX devboard
 
@@ -104,25 +104,37 @@ df -h
 
 
 -------------------------------------------
--
-cp patches/0001-falcon-mode-phytec-imx8mp-linux-imx.patch ~/phyLinux/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/git/
-cd ~/phyLinux/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/git/
+yocto_dir=~/phyLinux
+dir=`pwd`
+
+cd ${yocto_dir}
+source sources/poky/oe-init-build-env
+
+cp patches/0001-falcon-mode-phytec-imx8mp-linux-imx.patch ${yocto_dir}/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/git/
+cp patches/0001-falcon-mode-phytec-imx8mp-yocto.patch ${yocto_dir}/sources/meta-phytec/
+cd ${yocto_dir}/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/git/
 git apply 0001-falcon-mode-phytec-imx8mp-linux-imx.patch
-ls ~/phyLinux/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/build/arch/arm64/boot/dts/freescale/imx8mp-phyboard-pollux-rdk*
--
+cd ${yocto_dir}/sources/meta-phytec/
+git apply 0001-falcon-mode-phytec-imx8mp-yocto.patch
 
-
-# yocto env...
-devtool modify -x linux-imx linux-imx
-cp patches/0001-falcon-mode-phytec-imx8mp-linux-imx.patch ~/phyLinux/build/linux-imx/
-cd ~/phyLinux/build/linux-imx/
-git apply 0001-falcon-mode-phytec-imx8mp-linux-imx.patch
-cd ..
-
-
-~/phyLinux/sources/meta-phytec/conf/machine/phyboard-pollux-imx8mp-3.conf
-        freescale/imx8mp-phyboard-pollux-rdk-falcon-sdcard.dtb \
-        freescale/imx8mp-phyboard-pollux-rdk-falcon-emmc.dtb \
-
+cd ${yocto_dir}/build/
 bitbake -c compile -f linux-imx
-~/phyLinux/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/linux-imx-5.15.71/arch/arm64/boot/dts/freescale/imx8mp-phyboard-pollux-rdk-falcon-sdcard.dtb
+ls ${yocto_dir}/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/build/arch/arm64/boot/dts/freescale/imx8mp-phyboard-pollux-rdk*
+cd $dir
+
+
+
+--- devtool modify -x linux-imx version
+# if linux-imx not exists
+devtool modify -x linux-imx linux-imx
+cp patches/0001-falcon-mode-phytec-imx8mp-linux-imx.patch ${yocto_dir}/build/linux-imx/
+cp patches/0001-falcon-mode-phytec-imx8mp-yocto.patch ${yocto_dir}/sources/meta-phytec/
+cd ${yocto_dir}/build/linux-imx/
+git apply 0001-falcon-mode-phytec-imx8mp-linux-imx.patch
+cd ${yocto_dir}/sources/meta-phytec/
+git apply 0001-falcon-mode-phytec-imx8mp-yocto.patch
+
+cd ${yocto_dir}/build/
+bitbake -c compile -f linux-imx
+ls ${yocto_dir}/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/linux-imx-5.15.71/arch/arm64/boot/dts/freescale/imx8mp-phyboard-pollux-rdk*
+cd $dir

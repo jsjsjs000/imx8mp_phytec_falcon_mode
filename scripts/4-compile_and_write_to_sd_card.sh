@@ -10,7 +10,8 @@ yocto_source=sources/poky/oe-init-build-env
 yocto_kernel=${yocto_dir}/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/build/arch/arm64/boot/Image
 
 ddr_firmware=firmware-imx-8.18.1
-device_tree=imx8mp-phyboard-pollux-rdk-falcon
+device_tree_sdcard=imx8mp-phyboard-pollux-rdk-falcon-sdcard
+device_tree_emmc=imx8mp-phyboard-pollux-rdk-falcon-emmc
 
 # ----------------------------------------
 # lsblk -e7  # list SD cards
@@ -24,20 +25,22 @@ red="\e[31m"
 yellow="\e[33m"
 kernel_yocto=$1
 normal_falcon=$2
-sdcard=$3
+sdcard_emmc=$3
+sdcard=$4
 
 function help_and_exit
 {
 	echo "usage:"
-	echo "./scripts/3-compile_and_write_to_sd_card.sh [kernel|yocto] [normal|falcon] sd_card_device"
+	echo "./scripts/3-compile_and_write_to_sd_card.sh [kernel|yocto] [normal|falcon] [sdcard|emmc] sd_card_device"
 	echo "  sd_card_device - /dev/mmcblk0 or /dev/sdx"
 	echo "  type           - 'lsblk -e7' to list SD card devices"
 	exit
 }
 
-if [ "$#" -ne 3 ]; then help_and_exit; fi
+if [ "$#" -ne 4 ]; then help_and_exit; fi
 if [[ "${kernel_yocto}" != "kernel" && "${kernel_yocto}" != "yocto" ]]; then help_and_exit; fi
 if [[ "${normal_falcon}" != "normal" && "${normal_falcon}" != "falcon" ]]; then help_and_exit; fi
+if [[ "${sdcard_emmc}" != "sdcard" && "${sdcard_emmc}" != "emmc" ]]; then help_and_exit; fi
 
 if [ ! -f "${toolchain_source}" ]; then
 	echo -e "${red}Error: BSP toolchain not exists:\n${toolchain_source}\nSet toolchain_source variable.${default}"
@@ -217,13 +220,32 @@ if [ "${normal_falcon}" == "falcon" ]; then
 fi
 
 if [ "${normal_falcon}" == "falcon" ]; then
-	echo -e "-------------------- Device Tree ${device_tree}.dtb to SD card --------------------"
+	echo -e "-------------------- Device Tree to SD card --------------------"
 	if [ "${kernel_yocto}" == "kernel" ]; then
-		if [ ! -f linux-imx/arch/arm64/boot/dts/freescale/${device_tree}.dtb ]; then
-			echo -e "${red}Error: File '${device_tree}.dtb' not exists.${default}"
+		if [ ! -f linux-imx/arch/arm64/boot/dts/freescale/${device_tree_sdcard}.dtb ]; then
+			echo -e "${red}Error: File '${device_tree_sdcard}.dtb' not exists.${default}"
 			exit 1
 		fi
-		cp linux-imx/arch/arm64/boot/dts/freescale/${device_tree}.dtb /media/$USER/boot
+		sudo cp linux-imx/arch/arm64/boot/dts/freescale/${device_tree_sdcard}.dtb /media/$USER/root/home/root/.falcon/
+
+		if [ ! -f linux-imx/arch/arm64/boot/dts/freescale/${device_tree_emmc}.dtb ]; then
+			echo -e "${red}Error: File '${device_tree_emmc}.dtb' not exists.${default}"
+			exit 1
+		fi
+		sudo cp linux-imx/arch/arm64/boot/dts/freescale/${device_tree_emmc}.dtb /media/$USER/root/home/root/.falcon/
+	fi
+	if [ "${kernel_yocto}" == "yocto" ]; then
+		if [ ! -f ${yocto_dir}/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/build/arch/arm64/boot/dts/freescale/${device_tree_sdcard}.dtb ]; then
+			echo -e "${red}Error: File '${device_tree_sdcard}.dtb' not exists.${default}"
+			exit 1
+		fi
+		sudo cp ${yocto_dir}/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/build/arch/arm64/boot/dts/freescale/${device_tree_sdcard}.dtb /media/$USER/root/home/root/.falcon/
+
+		if [ ! -f ${yocto_dir}/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/build/arch/arm64/boot/dts/freescale/${device_tree_emmc}.dtb ]; then
+			echo -e "${red}Error: File '${device_tree_emmc}.dtb' not exists.${default}"
+			exit 1
+		fi
+		sudo cp ${yocto_dir}/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/build/arch/arm64/boot/dts/freescale/${device_tree_emmc}.dtb /media/$USER/root/home/root/.falcon/
 	fi
 
 	echo "-------------------- u-boot.itb to SD card --------------------"
