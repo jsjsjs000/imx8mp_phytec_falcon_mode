@@ -16,6 +16,9 @@ chmod +x scripts/*.sh
 ./scripts/1-download_bootloader.sh
 # Accept license - press: q, q, y, Enter
 
+# list available SD cards
+lsblk -e7
+
 # 4.a. Kernel standalone
 # Download Linux Kernel. Or use Linux BSD in Yocto - Phytec PD23.1.0
 ./scripts/2-optional_download_linux_kernel.sh
@@ -25,10 +28,14 @@ chmod +x scripts/*.sh
 # Set variables: toolchain_source, toolchain_sysroot in script '/scripts/4-compile_and_write_to_sd_card.sh'
 ./scripts/4-compile_and_write_to_sd_card.sh kernel normal /dev/mmcblk0  # or /dev/sd[x] - lsblk -e7 to list SD cards
 
+./scripts/6-unmount_sd_card.sh
+# remove SD card and run i.MX devboard
+
 # Apply falcon patches, compile bootloader and write to SD card
 ./scripts/5-apply_falcon_patches.sh
 ./scripts/4-compile_and_write_to_sd_card.sh kernel falcon /dev/mmcblk0  # or /dev/sd[x] - lsblk -e7 to list SD cards
 
+./scripts/6-unmount_sd_card.sh
 # remove SD card and run i.MX devboard
 
 # 4.b. Kernel from Yocto
@@ -48,6 +55,7 @@ cd $dir  # return to original folder
 # in script '/scripts/4-compile_and_write_to_sd_card.sh'
 ./scripts/4-compile_and_write_to_sd_card.sh yocto falcon /dev/mmcblk0  # or /dev/sd[x] - lsblk -e7 to list SD cards
 
+./scripts/6-unmount_sd_card.sh
 # remove SD card and run i.MX devboard
 
 # 5. Read system boot time
@@ -71,19 +79,23 @@ df -h
 
 # 7. Copy SD card image from Yocto to SD card
 # on PC:
-sudo cp ~/phyLinux/build/deploy/images/phyboard-pollux-imx8mp-3/phytec-qt6demo-image-phyboard-pollux-imx8mp-3.wic /media/$USER/root/
-sync; umount /media/$USER/boot; umount /media/$USER/root
+sudo cp ~/phyLinux/build/deploy/images/phyboard-pollux-imx8mp-3/phytec-qt6demo-image-phyboard-pollux-imx8mp-3.wic /media/$USER/root/root/
+# 2.8GB
+./scripts/6-unmount_sd_card.sh
+# remove SD card and run i.MX devboard
 
 # 8. Copy SD card image to eMMC
 # on i.MX Linux - boot from SD card:
 fdisk -l
-dd if=/phytec-qt6demo-image-phyboard-pollux-imx8mp-3.wic of=/dev/mmcblk2
+dd if=/root/phytec-qt6demo-image-phyboard-pollux-imx8mp-3.wic of=/dev/mmcblk2
 
 dd if=/home/root/.falcon/flash_falcon.bin of=/dev/mmcblk2 bs=1k seek=32 conv=fsync
 
 mkdir -p /mnt/sd_boot
 mount /dev/mmcblk2p1 /mnt/sd_boot/
 cp /boot/* /mnt/sd_boot/
+# not works
+cp /home/root/.falcon/imx8mp-phyboard-pollux-rdk-falcon-emmc.dtb /mnt/sd_boot/imx8mp-phyboard-pollux-rdk-falcon.dtb
 umount /mnt/sd_boot/
 
 # eMMC boot mode DIP switch on Phytec PhyBoard (1234): 0000
