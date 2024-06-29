@@ -19,6 +19,9 @@ chmod +x scripts/*.sh
 # list available SD cards
 lsblk -e7
 
+# 4 Kernel standalone of Kernel from Yocto
+# (Kernel standalone don't have modules)
+
 # 4.a. Kernel standalone
 # Download Linux Kernel. Or use Linux BSD in Yocto - Phytec PD23.1.0
 ./scripts/2-optional_download_linux_kernel.sh
