@@ -94,7 +94,6 @@ dd if=/home/root/.falcon/flash_falcon.bin of=/dev/mmcblk2 bs=1k seek=32 conv=fsy
 mkdir -p /mnt/sd_boot
 mount /dev/mmcblk2p1 /mnt/sd_boot/
 cp /boot/* /mnt/sd_boot/
-# not works
 cp /home/root/.falcon/imx8mp-phyboard-pollux-rdk-falcon-emmc.dtb /mnt/sd_boot/imx8mp-phyboard-pollux-rdk-falcon.dtb
 umount /mnt/sd_boot/
 
