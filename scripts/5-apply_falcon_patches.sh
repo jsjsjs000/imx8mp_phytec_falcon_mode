@@ -36,3 +36,15 @@ cd ..
 cd imx-mkimage/
 git apply 0001-falcon-mode-phytec-imx8mp-mkimage.patch
 cd ..
+
+cd u-boot-imx/
+git add .
+git commit -m "PCO falcon mode v1.0"
+git status
+cd ..
+
+cd imx-atf/
+git add .
+git commit -m "PCO falcon mode v1.0"
+git status
+cd ..
