@@ -7,7 +7,8 @@ toolchain_sysroot=/opt/ampliphy-vendor-xwayland/BSP-Yocto-NXP-i.MX8MP-PD23.1.0/s
 
 yocto_dir=~/phyLinux
 yocto_source=sources/poky/oe-init-build-env
-yocto_kernel=${yocto_dir}/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/build/arch/arm64/boot/Image
+yocto_kernel_dir=${yocto_dir}/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/linux-imx-5.15.71/arch/arm64/boot  # tested for devtool modify -x linux-imx linux-imx
+yocto_kernel=${yocto_kernel_dir}/Image
 
 ddr_firmware=firmware-imx-8.18.1
 device_tree_sdcard=imx8mp-phyboard-pollux-rdk-falcon-sdcard
@@ -234,18 +235,18 @@ if [ "${normal_falcon}" == "falcon" ]; then
 		sudo cp linux-imx/arch/arm64/boot/dts/freescale/${device_tree_emmc}.dtb /media/$USER/root/home/root/.falcon/
 	fi
 	if [ "${kernel_yocto}" == "yocto" ]; then
-		if [ ! -f ${yocto_dir}/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/build/arch/arm64/boot/dts/freescale/${device_tree_sdcard}.dtb ]; then
+		if [ ! -f ${yocto_kernel_dir}/dts/freescale/${device_tree_sdcard}.dtb ]; then
 			echo -e "${red}Error: File '${device_tree_sdcard}.dtb' not exists.${default}"
 			exit 1
 		fi
-		sudo cp ${yocto_dir}/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/build/arch/arm64/boot/dts/freescale/${device_tree_sdcard}.dtb /media/$USER/root/home/root/.falcon/
-		sudo cp ${yocto_dir}/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/build/arch/arm64/boot/dts/freescale/${device_tree_sdcard}.dtb /media/$USER/boot/imx8mp-phyboard-pollux-rdk-falcon.dtb
+		sudo cp ${yocto_kernel_dir}/dts/freescale/${device_tree_sdcard}.dtb /media/$USER/root/home/root/.falcon/
+		sudo cp ${yocto_kernel_dir}/dts/freescale/${device_tree_sdcard}.dtb /media/$USER/boot/imx8mp-phyboard-pollux-rdk-falcon.dtb
 
-		if [ ! -f ${yocto_dir}/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/build/arch/arm64/boot/dts/freescale/${device_tree_emmc}.dtb ]; then
+		if [ ! -f ${yocto_kernel_dir}/dts/freescale/${device_tree_emmc}.dtb ]; then
 			echo -e "${red}Error: File '${device_tree_emmc}.dtb' not exists.${default}"
 			exit 1
 		fi
-		sudo cp ${yocto_dir}/build/tmp/work/phyboard_pollux_imx8mp_3-phytec-linux/linux-imx/5.15.71-r0.0/build/arch/arm64/boot/dts/freescale/${device_tree_emmc}.dtb /media/$USER/root/home/root/.falcon/
+		sudo cp ${yocto_kernel_dir}/dts/freescale/${device_tree_emmc}.dtb /media/$USER/root/home/root/.falcon/
 	fi
 
 	echo "-------------------- u-boot.itb to SD card --------------------"
@@ -278,7 +279,7 @@ if [ "${normal_falcon}" == "falcon" ]; then
 fi
 
 if [ "${normal_falcon}" == "normal" ]; then
-	echo "-------------------- Output 6 (?) files --------------------"
+	echo "-------------------- Output 6 files --------------------"
 else
 	echo "-------------------- Output 8 files --------------------"
 fi
